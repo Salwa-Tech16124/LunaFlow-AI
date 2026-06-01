@@ -184,9 +184,11 @@ def apply_theme(is_dark=False):
             font-size: 16px !important; /* Prevent iOS/WebView zoom */
         }}
         
-        .stTextInput>div>div>input:focus, .stNumberInput>div>div>input:focus, .stDateInput>div>div>input:focus {{
+        .stTextInput>div>div>input:focus, .stNumberInput>div>div>input:focus, .stDateInput>div>div>input:focus, .stSelectbox>div>div>div:focus-within {{
             border-color: var(--primary) !important;
             box-shadow: 0 0 0 2px rgba(255, 126, 182, 0.2) !important;
+            background-color: var(--background) !important;
+            color: var(--text) !important;
         }}
         
         /* Fix Plotly Charts Overflow on Mobile */

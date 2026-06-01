@@ -468,16 +468,20 @@ with tabs[6]:
         p_3 = st.checkbox("3 days before period", value='3' in settings['period_reminder_days'])
         p_1 = st.checkbox("1 day before period", value='1' in settings['period_reminder_days'])
         
-        st.markdown('<br>### 💧 Water Reminder', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('### 💧 Water Reminder')
         water_int = st.selectbox("Reminder Interval", ["Off", "Every 2 Hours", "Every 4 Hours", "Custom"], index=["Off", "Every 2 Hours", "Every 4 Hours", "Custom"].index(settings['water_reminder_interval']))
         
-        st.markdown('<br>### ✨ Wellness Reminders', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('### ✨ Wellness Reminders')
         well_rem = st.checkbox("Daily Self-Care and Wellness Tips", value=settings['wellness_reminder'])
         
-        st.markdown('<br>### 🌸 Ovulation Reminder', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('### 🌸 Ovulation Reminder')
         ovu_rem = st.checkbox("Notify me near my fertile window", value=settings.get('ovulation_reminder', True))
         
-        st.markdown('<br>### 💊 Medicine Reminder', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('### 💊 Medicine Reminder')
         med_rem = st.text_input("Medicine to remind (e.g. Vitamins)", value=settings.get('medicine_reminder', ''), placeholder="Leave empty for none")
         
         st.markdown("<br>", unsafe_allow_html=True)
@@ -555,7 +559,8 @@ with tabs[7]:
             st.success("Profile updated!")
             st.rerun()
             
-        st.markdown('<br>### Device Setup (Firebase)', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('### Device Setup (Firebase)')
         fcm = st.text_input("FCM Device Token", value=profile['fcm_token'], type="password")
         if st.button("Link Device", use_container_width=True):
             save_fcm_token(user_id, fcm)
@@ -586,26 +591,33 @@ with tabs[7]:
         else:
             st.write("Log more cycles to generate insights.")
             
-        st.markdown('<br>### 📥 Data Export', unsafe_allow_html=True)
+        st.markdown("<br>", unsafe_allow_html=True)
+        st.markdown('### 📥 Data Export')
         st.write("Download your secure health data.")
         
-        csv_cycles = all_cycles.to_csv(index=False) if not all_cycles.empty else ""
-        st.download_button(
-            label="Download Cycle History (CSV)",
-            data=csv_cycles,
-            file_name='lunaflow_cycles.csv',
-            mime='text/csv',
-            use_container_width=True
-        )
+        if not all_cycles.empty:
+            csv_cycles = all_cycles.to_csv(index=False)
+            st.download_button(
+                label="Download Cycle History (CSV)",
+                data=csv_cycles,
+                file_name='lunaflow_cycles.csv',
+                mime='text/csv',
+                use_container_width=True
+            )
+        else:
+            st.button("Download Cycle History (CSV)", disabled=True, help="No data to export", use_container_width=True)
         
         all_symp = pd.DataFrame(get_all_symptoms(user_id))
-        csv_symp = all_symp.to_csv(index=False) if not all_symp.empty else ""
-        st.download_button(
-            label="Download Symptom History (CSV)",
-            data=csv_symp,
-            file_name='lunaflow_symptoms.csv',
-            mime='text/csv',
-            use_container_width=True
-        )
+        if not all_symp.empty:
+            csv_symp = all_symp.to_csv(index=False)
+            st.download_button(
+                label="Download Symptom History (CSV)",
+                data=csv_symp,
+                file_name='lunaflow_symptoms.csv',
+                mime='text/csv',
+                use_container_width=True
+            )
+        else:
+            st.button("Download Symptom History (CSV)", disabled=True, help="No data to export", use_container_width=True)
         
         st.markdown('</div>', unsafe_allow_html=True)
