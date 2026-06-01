@@ -10,10 +10,9 @@ def get_connection():
 def init_wellness_db():
     conn = get_connection()
     c = conn.cursor()
-    try:
-        c.execute("SELECT user_id FROM wellness_logs LIMIT 1")
-    except sqlite3.OperationalError:
-        c.execute("ALTER TABLE wellness_logs RENAME TO wellness_logs_old")
+    
+    c.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='wellness_logs'")
+    if c.fetchone() is None:
         c.execute('''
             CREATE TABLE wellness_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -28,23 +27,28 @@ def init_wellness_db():
                 UNIQUE(user_id, date)
             )
         ''')
-        c.execute("INSERT INTO wellness_logs (user_id, date, mood, energy, stress, sleep, water, notes) SELECT 1, date, mood, energy, stress, sleep, water, notes FROM wellness_logs_old")
-        c.execute("DROP TABLE wellness_logs_old")
     else:
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS wellness_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                date DATE NOT NULL,
-                mood TEXT,
-                energy INTEGER,
-                stress INTEGER,
-                sleep REAL,
-                water INTEGER,
-                notes TEXT,
-                UNIQUE(user_id, date)
-            )
-        ''')
+        try:
+            c.execute("SELECT user_id FROM wellness_logs LIMIT 1")
+        except sqlite3.OperationalError:
+            c.execute("ALTER TABLE wellness_logs RENAME TO wellness_logs_old")
+            c.execute('''
+                CREATE TABLE wellness_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    user_id INTEGER NOT NULL,
+                    date DATE NOT NULL,
+                    mood TEXT,
+                    energy INTEGER,
+                    stress INTEGER,
+                    sleep REAL,
+                    water INTEGER,
+                    notes TEXT,
+                    UNIQUE(user_id, date)
+                )
+            ''')
+            c.execute("INSERT INTO wellness_logs (user_id, date, mood, energy, stress, sleep, water, notes) SELECT 1, date, mood, energy, stress, sleep, water, notes FROM wellness_logs_old")
+            c.execute("DROP TABLE wellness_logs_old")
+
     conn.commit()
     conn.close()
 

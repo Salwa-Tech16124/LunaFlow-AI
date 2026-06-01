@@ -7,139 +7,68 @@ DB_NAME = os.path.join(os.path.dirname(__file__), "..", "lunaflow.db")
 def get_connection():
     return sqlite3.connect(DB_NAME)
 
+def migrate_or_create(c, table_name, create_sql, columns):
+    c.execute(f"SELECT name FROM sqlite_master WHERE type='table' AND name='{table_name}'")
+    if c.fetchone() is None:
+        c.execute(create_sql)
+    else:
+        try:
+            c.execute(f"SELECT user_id FROM {table_name} LIMIT 1")
+        except sqlite3.OperationalError:
+            c.execute(f"ALTER TABLE {table_name} RENAME TO {table_name}_old")
+            c.execute(create_sql)
+            c.execute(f"INSERT INTO {table_name} (user_id, {columns}) SELECT 1, {columns} FROM {table_name}_old")
+            c.execute(f"DROP TABLE {table_name}_old")
+
 def init_db():
     conn = get_connection()
     c = conn.cursor()
     
-    # cycles table migration
-    try:
-        c.execute("SELECT user_id FROM cycles LIMIT 1")
-    except sqlite3.OperationalError:
-        c.execute("ALTER TABLE cycles RENAME TO cycles_old")
-        c.execute('''
-            CREATE TABLE cycles (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                last_period_start DATE NOT NULL,
-                cycle_length INTEGER NOT NULL,
-                period_duration INTEGER NOT NULL
-            )
-        ''')
-        c.execute("INSERT INTO cycles (user_id, last_period_start, cycle_length, period_duration) SELECT 1, last_period_start, cycle_length, period_duration FROM cycles_old")
-        c.execute("DROP TABLE cycles_old")
-    else:
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS cycles (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                last_period_start DATE NOT NULL,
-                cycle_length INTEGER NOT NULL,
-                period_duration INTEGER NOT NULL
-            )
-        ''')
-        
-    # symptoms table migration
-    try:
-        c.execute("SELECT user_id FROM symptoms LIMIT 1")
-    except sqlite3.OperationalError:
-        c.execute("ALTER TABLE symptoms RENAME TO symptoms_old")
-        c.execute('''
-            CREATE TABLE symptoms (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                date DATE NOT NULL,
-                cramps BOOLEAN,
-                mood_swings BOOLEAN,
-                headache BOOLEAN,
-                acne BOOLEAN,
-                fatigue BOOLEAN,
-                bloating BOOLEAN,
-                UNIQUE(user_id, date)
-            )
-        ''')
-        c.execute("INSERT INTO symptoms (user_id, date, cramps, mood_swings, headache, acne, fatigue, bloating) SELECT 1, date, cramps, mood_swings, headache, acne, fatigue, bloating FROM symptoms_old")
-        c.execute("DROP TABLE symptoms_old")
-    else:
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS symptoms (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                date DATE NOT NULL,
-                cramps BOOLEAN,
-                mood_swings BOOLEAN,
-                headache BOOLEAN,
-                acne BOOLEAN,
-                fatigue BOOLEAN,
-                bloating BOOLEAN,
-                UNIQUE(user_id, date)
-            )
-        ''')
+    migrate_or_create(c, 'cycles', '''
+        CREATE TABLE cycles (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            last_period_start DATE NOT NULL,
+            cycle_length INTEGER NOT NULL,
+            period_duration INTEGER NOT NULL
+        )
+    ''', "last_period_start, cycle_length, period_duration")
 
-    # chat_history migration
-    try:
-        c.execute("SELECT user_id FROM chat_history LIMIT 1")
-    except sqlite3.OperationalError:
-        c.execute("ALTER TABLE chat_history RENAME TO chat_history_old")
-        c.execute('''
-            CREATE TABLE chat_history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                role TEXT NOT NULL,
-                content TEXT NOT NULL,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
-        c.execute("INSERT INTO chat_history (user_id, role, content, timestamp) SELECT 1, role, content, timestamp FROM chat_history_old")
-        c.execute("DROP TABLE chat_history_old")
-    else:
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS chat_history (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                role TEXT NOT NULL,
-                content TEXT NOT NULL,
-                timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-            )
-        ''')
+    migrate_or_create(c, 'symptoms', '''
+        CREATE TABLE symptoms (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            date DATE NOT NULL,
+            cramps BOOLEAN,
+            mood_swings BOOLEAN,
+            headache BOOLEAN,
+            acne BOOLEAN,
+            fatigue BOOLEAN,
+            bloating BOOLEAN,
+            UNIQUE(user_id, date)
+        )
+    ''', "date, cramps, mood_swings, headache, acne, fatigue, bloating")
 
-    # water_logs migration
-    try:
-        c.execute("SELECT user_id FROM water_logs LIMIT 1")
-    except sqlite3.OperationalError:
-        try:
-            c.execute("ALTER TABLE water_logs RENAME TO water_logs_old")
-            c.execute('''
-                CREATE TABLE water_logs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL,
-                    date DATE NOT NULL,
-                    glasses INTEGER NOT NULL,
-                    UNIQUE(user_id, date)
-                )
-            ''')
-            c.execute("INSERT INTO water_logs (user_id, date, glasses) SELECT 1, date, glasses FROM water_logs_old")
-            c.execute("DROP TABLE water_logs_old")
-        except sqlite3.OperationalError:
-            c.execute('''
-                CREATE TABLE IF NOT EXISTS water_logs (
-                    id INTEGER PRIMARY KEY AUTOINCREMENT,
-                    user_id INTEGER NOT NULL,
-                    date DATE NOT NULL,
-                    glasses INTEGER NOT NULL,
-                    UNIQUE(user_id, date)
-                )
-            ''')
-    else:
-        c.execute('''
-            CREATE TABLE IF NOT EXISTS water_logs (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                user_id INTEGER NOT NULL,
-                date DATE NOT NULL,
-                glasses INTEGER NOT NULL,
-                UNIQUE(user_id, date)
-            )
-        ''')
-        
+    migrate_or_create(c, 'chat_history', '''
+        CREATE TABLE chat_history (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            role TEXT NOT NULL,
+            content TEXT NOT NULL,
+            timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
+        )
+    ''', "role, content, timestamp")
+
+    migrate_or_create(c, 'water_logs', '''
+        CREATE TABLE water_logs (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            user_id INTEGER NOT NULL,
+            date DATE NOT NULL,
+            glasses INTEGER NOT NULL,
+            UNIQUE(user_id, date)
+        )
+    ''', "date, glasses")
+
     c.execute('''
         CREATE TABLE IF NOT EXISTS wellness_tips (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
