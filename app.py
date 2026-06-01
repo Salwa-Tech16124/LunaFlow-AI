@@ -6,7 +6,7 @@ import pandas as pd
 import time
 from database import init_db, save_cycle, get_latest_cycle, get_all_cycles, save_symptoms, get_all_symptoms, save_chat_message, get_chat_history, clear_chat_history, save_water_log, get_water_log, get_notification_settings, save_notification_settings
 from prediction import calculate_predictions, get_current_cycle_day, get_cycle_phase
-from ui import apply_theme, metric_card, get_logo_svg
+from ui import apply_theme, metric_card, get_logo_svg, render_splash_screen
 from utils.ai_assistant import get_sarvam_response
 from database.users_db import init_users_db
 from auth.login import render_login
@@ -35,6 +35,11 @@ if 'theme' not in st.session_state:
 init_users_db()
 init_db()
 init_wellness_db()
+
+# Splash Screen Logic
+if 'splash_shown' not in st.session_state:
+    render_splash_screen()
+    st.session_state.splash_shown = True
 
 # Top right theme toggle
 top_c1, top_c2 = st.columns([9, 1])
@@ -469,13 +474,19 @@ with tabs[6]:
         st.markdown('<br>### ✨ Wellness Reminders', unsafe_allow_html=True)
         well_rem = st.checkbox("Daily Self-Care and Wellness Tips", value=settings['wellness_reminder'])
         
+        st.markdown('<br>### 🌸 Ovulation Reminder', unsafe_allow_html=True)
+        ovu_rem = st.checkbox("Notify me near my fertile window", value=settings.get('ovulation_reminder', True))
+        
+        st.markdown('<br>### 💊 Medicine Reminder', unsafe_allow_html=True)
+        med_rem = st.text_input("Medicine to remind (e.g. Vitamins)", value=settings.get('medicine_reminder', ''), placeholder="Leave empty for none")
+        
         st.markdown("<br>", unsafe_allow_html=True)
         if st.button("Save Preferences", use_container_width=True):
             active_p = []
             if p_7: active_p.append('7')
             if p_3: active_p.append('3')
             if p_1: active_p.append('1')
-            save_notification_settings(user_id, active_p, water_int, well_rem)
+            save_notification_settings(user_id, active_p, water_int, well_rem, ovu_rem, med_rem)
             st.success("Notification preferences saved!")
         st.markdown('</div>', unsafe_allow_html=True)
         
@@ -506,6 +517,17 @@ with tabs[6]:
             
         if settings['wellness_reminder']:
             st.info("✨ Daily wellness tip scheduled for morning.")
+            has_reminders = True
+            
+        if settings.get('ovulation_reminder', True) and latest:
+            fertile_start = preds['fertile_window_start']
+            days_to_fertile = (fertile_start - date.today()).days
+            if 0 < days_to_fertile <= 5:
+                st.info(f"🌸 Your fertile window begins in {days_to_fertile} days.")
+                has_reminders = True
+                
+        if settings.get('medicine_reminder', ''):
+            st.info(f"💊 Medicine Reminder: {settings['medicine_reminder']}")
             has_reminders = True
             
         if not has_reminders:

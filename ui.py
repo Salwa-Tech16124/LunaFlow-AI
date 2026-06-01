@@ -44,6 +44,11 @@ def apply_theme(is_dark=False):
             -webkit-tap-highlight-color: transparent;
         }}
 
+        /* Hide Streamlit Native Elements */
+        #MainMenu {{visibility: hidden;}}
+        header {{visibility: hidden;}}
+        footer {{visibility: hidden;}}
+        
         .stApp {{
             background-color: var(--background);
             color: var(--text);
@@ -73,8 +78,13 @@ def apply_theme(is_dark=False):
         
         /* Animations */
         @keyframes fadeIn {{
-            from {{ opacity: 0; transform: translateY(10px); }}
-            to {{ opacity: 1; transform: translateY(0); }}
+            from {{ opacity: 0; }}
+            to {{ opacity: 1; }}
+        }}
+        
+        @keyframes slideUp {{
+            from {{ opacity: 0; transform: translateY(30px) scale(0.98); }}
+            to {{ opacity: 1; transform: translateY(0) scale(1); }}
         }}
 
         /* Premium Glassmorphism Cards */
@@ -87,8 +97,8 @@ def apply_theme(is_dark=False):
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.05);
             margin-bottom: 20px;
             border: 1px solid var(--border);
-            transition: all 0.3s ease;
-            animation: fadeIn 0.6s ease-out forwards;
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            animation: slideUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
             height: 100%;
             width: 100%;
             box-sizing: border-box;
@@ -337,3 +347,83 @@ def get_logo_svg(width=40, height=40):
         <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" fill="url(#moonGradient)" filter="url(#glow)"/>
     </svg>
     """
+
+def render_splash_screen():
+    """Render a premium mobile splash screen that fades out."""
+    splash_html = """
+    <style>
+        .splash-screen {
+            position: fixed;
+            top: 0; left: 0; width: 100vw; height: 100vh;
+            background: linear-gradient(135deg, #FF7EB6 0%, #C8A2FF 100%);
+            z-index: 999999;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            animation: splashFadeOut 0.8s ease-in-out 2.5s forwards;
+            pointer-events: none;
+        }
+        
+        .splash-content {
+            text-align: center;
+            animation: slideUp 1s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+        
+        @keyframes splashFadeOut {
+            to { opacity: 0; visibility: hidden; }
+        }
+        
+        @keyframes floatLogo {
+            0% { transform: translateY(0px); }
+            50% { transform: translateY(-10px); }
+            100% { transform: translateY(0px); }
+        }
+        
+        .splash-logo {
+            font-size: 5rem;
+            margin-bottom: 15px;
+            text-shadow: 0 10px 30px rgba(255,255,255,0.4);
+            animation: floatLogo 3s ease-in-out infinite;
+        }
+        
+        .splash-title {
+            color: white;
+            font-size: 3rem;
+            font-weight: 700;
+            letter-spacing: -1px;
+            margin: 0;
+            text-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        }
+        
+        .splash-tagline {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-top: 10px;
+            font-weight: 600;
+        }
+        
+        /* Splash Sakura Petals */
+        .splash-sakura-container {
+            position: absolute;
+            width: 100%; height: 100%;
+            overflow: hidden;
+        }
+    </style>
+    <div class="splash-screen">
+        <div class="splash-sakura-container">
+            <div class="petal" style="left: 10%; color: white; animation-duration: 4s; font-size: 2rem;">🌸</div>
+            <div class="petal" style="left: 40%; color: white; animation-duration: 3s; font-size: 1.5rem;">✨</div>
+            <div class="petal" style="left: 80%; color: white; animation-duration: 5s; font-size: 2.2rem;">🌸</div>
+        </div>
+        <div class="splash-content">
+            <div class="splash-logo">🌙</div>
+            <h1 class="splash-title">LunaFlow AI</h1>
+            <p class="splash-tagline">Track • Predict • Understand</p>
+        </div>
+    </div>
+    """
+    import streamlit as st
+    st.markdown(splash_html, unsafe_allow_html=True)

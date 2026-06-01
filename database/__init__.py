@@ -92,7 +92,9 @@ def init_db():
             user_id INTEGER PRIMARY KEY,
             period_reminder_days TEXT DEFAULT '7,3,1',
             water_reminder_interval TEXT DEFAULT 'Off',
-            wellness_reminder BOOLEAN DEFAULT 1
+            wellness_reminder BOOLEAN DEFAULT 1,
+            ovulation_reminder BOOLEAN DEFAULT 1,
+            medicine_reminder TEXT DEFAULT ''
         )
     ''')
     conn.commit()
@@ -202,32 +204,38 @@ def get_water_log(user_id, date_val):
 def get_notification_settings(user_id):
     conn = get_connection()
     c = conn.cursor()
-    c.execute('SELECT period_reminder_days, water_reminder_interval, wellness_reminder FROM notification_settings WHERE user_id = ?', (user_id,))
+    c.execute('SELECT period_reminder_days, water_reminder_interval, wellness_reminder, ovulation_reminder, medicine_reminder FROM notification_settings WHERE user_id = ?', (user_id,))
     row = c.fetchone()
     conn.close()
     if row:
         return {
             'period_reminder_days': row[0].split(',') if row[0] else [],
             'water_reminder_interval': row[1],
-            'wellness_reminder': bool(row[2])
+            'wellness_reminder': bool(row[2]),
+            'ovulation_reminder': bool(row[3]),
+            'medicine_reminder': row[4]
         }
     return {
         'period_reminder_days': ['7', '3', '1'],
         'water_reminder_interval': 'Off',
-        'wellness_reminder': True
+        'wellness_reminder': True,
+        'ovulation_reminder': True,
+        'medicine_reminder': ''
     }
 
-def save_notification_settings(user_id, period_days, water_interval, wellness_reminder):
+def save_notification_settings(user_id, period_days, water_interval, wellness_reminder, ovulation_reminder, medicine_reminder):
     conn = get_connection()
     c = conn.cursor()
     period_str = ",".join(period_days)
     c.execute('''
-        INSERT INTO notification_settings (user_id, period_reminder_days, water_reminder_interval, wellness_reminder)
-        VALUES (?, ?, ?, ?)
+        INSERT INTO notification_settings (user_id, period_reminder_days, water_reminder_interval, wellness_reminder, ovulation_reminder, medicine_reminder)
+        VALUES (?, ?, ?, ?, ?, ?)
         ON CONFLICT(user_id) DO UPDATE SET
             period_reminder_days=excluded.period_reminder_days,
             water_reminder_interval=excluded.water_reminder_interval,
-            wellness_reminder=excluded.wellness_reminder
-    ''', (user_id, period_str, water_interval, int(wellness_reminder)))
+            wellness_reminder=excluded.wellness_reminder,
+            ovulation_reminder=excluded.ovulation_reminder,
+            medicine_reminder=excluded.medicine_reminder
+    ''', (user_id, period_str, water_interval, int(wellness_reminder), int(ovulation_reminder), medicine_reminder))
     conn.commit()
     conn.close()
