@@ -559,12 +559,7 @@ with tabs[7]:
             st.success("Profile updated!")
             st.rerun()
             
-        st.markdown("<br>", unsafe_allow_html=True)
-        st.markdown('### Device Setup (Firebase)')
-        fcm = st.text_input("FCM Device Token", value=profile['fcm_token'], type="password")
-        if st.button("Link Device", use_container_width=True):
-            save_fcm_token(user_id, fcm)
-            st.success("Push Notifications Enabled!")
+
             
         st.markdown('</div>', unsafe_allow_html=True)
         
