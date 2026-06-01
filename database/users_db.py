@@ -16,6 +16,8 @@ def init_users_db():
             name TEXT NOT NULL,
             email TEXT NOT NULL UNIQUE,
             password_hash TEXT NOT NULL,
+            age INTEGER DEFAULT 25,
+            fcm_token TEXT DEFAULT '',
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ''')
@@ -51,3 +53,27 @@ def verify_user(email, password):
     if user:
         return {"id": user[0], "name": user[1]}
     return None
+
+def get_user_profile(user_id):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('SELECT name, email, age, fcm_token FROM users WHERE id = ?', (user_id,))
+    user = c.fetchone()
+    conn.close()
+    if user:
+        return {"name": user[0], "email": user[1], "age": user[2], "fcm_token": user[3]}
+    return None
+
+def update_user_profile(user_id, name, age):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('UPDATE users SET name = ?, age = ? WHERE id = ?', (name, age, user_id))
+    conn.commit()
+    conn.close()
+
+def save_fcm_token(user_id, token):
+    conn = get_connection()
+    c = conn.cursor()
+    c.execute('UPDATE users SET fcm_token = ? WHERE id = ?', (token, user_id))
+    conn.commit()
+    conn.close()

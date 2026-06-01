@@ -8,7 +8,7 @@ from database import init_db, save_cycle, get_latest_cycle, get_all_cycles, save
 from prediction import calculate_predictions, get_current_cycle_day, get_cycle_phase
 from ui import apply_theme, metric_card, get_logo_svg, render_splash_screen
 from utils.ai_assistant import get_sarvam_response
-from database.users_db import init_users_db
+from database.users_db import init_users_db, get_user_profile, update_user_profile, save_fcm_token
 from auth.login import render_login
 from auth.signup import render_signup
 from database.wellness_db import init_wellness_db, save_wellness_log, get_all_wellness_logs, get_latest_wellness_log
@@ -105,7 +105,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # Navigation
-tabs = st.tabs(["Dashboard", "Log Cycle", "Track Symptoms", "History", "🌸 Wellness Tracker", "🌙 AI Wellness Assistant", "🔔 Notifications"])
+tabs = st.tabs(["Dashboard", "Log Cycle", "Track Symptoms", "History", "🌸 Wellness Tracker", "🌙 AI Wellness Assistant", "🔔 Notifications", "👤 Profile"])
 
 with tabs[0]:
     st.subheader("Your Dashboard")
@@ -533,4 +533,79 @@ with tabs[6]:
         if not has_reminders:
             st.write("You have no upcoming active reminders.")
             
+        st.markdown('</div>', unsafe_allow_html=True)
+
+with tabs[7]:
+    st.subheader("👤 Your Profile & Insights")
+    
+    profile = get_user_profile(user_id)
+    
+    col1, col2 = st.columns([1, 1])
+    
+    with col1:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+        st.markdown('### Edit Profile')
+        
+        new_name = st.text_input("Name", value=profile['name'])
+        new_age = st.number_input("Age", min_value=10, max_value=100, value=profile['age'])
+        
+        if st.button("Save Profile", use_container_width=True):
+            update_user_profile(user_id, new_name, new_age)
+            st.session_state.user_name = new_name
+            st.success("Profile updated!")
+            st.rerun()
+            
+        st.markdown('<br>### Device Setup (Firebase)', unsafe_allow_html=True)
+        fcm = st.text_input("FCM Device Token", value=profile['fcm_token'], type="password")
+        if st.button("Link Device", use_container_width=True):
+            save_fcm_token(user_id, fcm)
+            st.success("Push Notifications Enabled!")
+            
+        st.markdown('</div>', unsafe_allow_html=True)
+        
+    with col2:
+        st.markdown('<div class="metric-card">', unsafe_allow_html=True)
+        st.markdown('### ✨ AI Health Insights')
+        
+        all_cycles = pd.DataFrame(get_all_cycles(user_id))
+        if not all_cycles.empty:
+            avg_cycle = int(all_cycles['cycle_length'].mean())
+            st.write(f"🌸 **Your average cycle length is {avg_cycle} days.**")
+            
+            latest = get_latest_cycle(user_id)
+            if latest:
+                preds = calculate_predictions(latest['last_period_start'], latest['cycle_length'])
+                days_until = (preds['next_period_date'] - date.today()).days
+                
+                if 0 < days_until <= 5:
+                    st.write("📉 **Insight:** Energy levels tend to drop before your period. Prioritize rest this week.")
+                elif days_until > 15:
+                    st.write("🔥 **Insight:** You are approaching your ovulation phase. Expect higher energy and mood!")
+                else:
+                    st.write("🌿 **Insight:** Keep tracking daily to build better personalized predictions.")
+        else:
+            st.write("Log more cycles to generate insights.")
+            
+        st.markdown('<br>### 📥 Data Export', unsafe_allow_html=True)
+        st.write("Download your secure health data.")
+        
+        csv_cycles = all_cycles.to_csv(index=False) if not all_cycles.empty else ""
+        st.download_button(
+            label="Download Cycle History (CSV)",
+            data=csv_cycles,
+            file_name='lunaflow_cycles.csv',
+            mime='text/csv',
+            use_container_width=True
+        )
+        
+        all_symp = pd.DataFrame(get_all_symptoms(user_id))
+        csv_symp = all_symp.to_csv(index=False) if not all_symp.empty else ""
+        st.download_button(
+            label="Download Symptom History (CSV)",
+            data=csv_symp,
+            file_name='lunaflow_symptoms.csv',
+            mime='text/csv',
+            use_container_width=True
+        )
+        
         st.markdown('</div>', unsafe_allow_html=True)
