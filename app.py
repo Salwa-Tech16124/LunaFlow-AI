@@ -3,6 +3,8 @@ from datetime import date
 import plotly.express as px
 import pandas as pd
 
+st.set_page_config(page_title="LunaFlow AI", page_icon="🌙", layout="centered", initial_sidebar_state="expanded")
+
 import time
 from database import init_db, save_cycle, get_latest_cycle, get_all_cycles, save_symptoms, get_all_symptoms, save_chat_message, get_chat_history, clear_chat_history, save_water_log, get_water_log, get_notification_settings, save_notification_settings
 from prediction import calculate_predictions, get_current_cycle_day, get_cycle_phase
