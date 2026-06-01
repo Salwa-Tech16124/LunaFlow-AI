@@ -10,23 +10,25 @@ def render_login():
         </div>
     """, unsafe_allow_html=True)
     
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
-        email = st.text_input("Email", placeholder="you@example.com")
-        password = st.text_input("Password", type="password", placeholder="••••••••")
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("Log In", use_container_width=True, key="login_submit_btn"):
-            if not email or not password:
-                st.error("Please enter both email and password.")
-            else:
-                user = verify_user(email, password)
-                if user:
-                    st.session_state.user_id = user['id']
-                    st.session_state.user_name = user['name']
-                    st.success("Logged in successfully!")
-                    st.rerun()
+        with st.container(border=True):
+            st.markdown("<h3 style='text-align: center; color: var(--primary); margin-bottom: 20px;'>Sign In</h3>", unsafe_allow_html=True)
+            email = st.text_input("Email", placeholder="you@example.com")
+            password = st.text_input("Password", type="password", placeholder="••••••••")
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Log In", use_container_width=True, key="login_submit_btn"):
+                if not email or not password:
+                    st.error("Please enter both email and password.")
                 else:
-                    st.error("Invalid email or password.")
-        
-    st.markdown('<div style="text-align: center; margin-top: 20px;"><p style="color: var(--text-sec);">Don\'t have an account? <b>Click Sign Up</b> above.</p></div>', unsafe_allow_html=True)
+                    user = verify_user(email, password)
+                    if user:
+                        st.session_state.user_id = user['id']
+                        st.session_state.user_name = user['name']
+                        st.success("Logged in successfully!")
+                        st.rerun()
+                    else:
+                        st.error("Invalid email or password.")
+            
+        st.markdown('<div style="text-align: center; margin-top: 15px;"><p style="color: var(--text-sec);">Don\'t have an account? <b>Click Sign Up</b> above.</p></div>', unsafe_allow_html=True)

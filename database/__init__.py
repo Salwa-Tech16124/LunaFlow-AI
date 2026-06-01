@@ -97,6 +97,15 @@ def init_db():
             medicine_reminder TEXT DEFAULT ''
         )
     ''')
+    
+    # Safe migration for missing columns
+    c.execute("PRAGMA table_info(notification_settings)")
+    ns_cols = [col[1] for col in c.fetchall()]
+    if 'ovulation_reminder' not in ns_cols:
+        c.execute("ALTER TABLE notification_settings ADD COLUMN ovulation_reminder BOOLEAN DEFAULT 1")
+    if 'medicine_reminder' not in ns_cols:
+        c.execute("ALTER TABLE notification_settings ADD COLUMN medicine_reminder TEXT DEFAULT ''")
+        
     conn.commit()
     conn.close()
 

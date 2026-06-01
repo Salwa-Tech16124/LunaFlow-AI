@@ -22,24 +22,26 @@ def render_signup():
         </div>
     """, unsafe_allow_html=True)
     
-    col1, col2, col3 = st.columns([1, 2, 1])
+    col1, col2, col3 = st.columns([1, 1.2, 1])
     with col2:
-        name = st.text_input("Full Name", placeholder="Jane Doe")
-        email = st.text_input("Email", placeholder="you@example.com")
-        password = st.text_input("Password", type="password", placeholder="8+ chars, uppercase, number")
-        confirm_password = st.text_input("Confirm Password", type="password", placeholder="Repeat password")
-        
-        st.markdown("<br>", unsafe_allow_html=True)
-        if st.button("Sign Up", use_container_width=True, key="signup_submit_btn"):
-            if not name or not email or not password or not confirm_password:
-                st.error("Please fill in all fields.")
-            elif password != confirm_password:
-                st.error("Passwords do not match.")
-            elif not check_password_strength(password):
-                st.error("Password must be at least 8 characters long and include an uppercase letter, lowercase letter, and number.")
-            else:
-                success = create_user(name, email, password)
-                if success:
-                    st.success("Account created successfully! Please Log In.")
+        with st.container(border=True):
+            st.markdown("<h3 style='text-align: center; color: var(--primary); margin-bottom: 20px;'>Create Account</h3>", unsafe_allow_html=True)
+            name = st.text_input("Full Name", placeholder="Jane Doe")
+            email = st.text_input("Email", placeholder="you@example.com")
+            password = st.text_input("Password", type="password", placeholder="8+ chars, uppercase, number")
+            confirm_password = st.text_input("Confirm Password", type="password", placeholder="Repeat password")
+            
+            st.markdown("<br>", unsafe_allow_html=True)
+            if st.button("Sign Up", use_container_width=True, key="signup_submit_btn"):
+                if not name or not email or not password or not confirm_password:
+                    st.error("Please fill in all fields.")
+                elif password != confirm_password:
+                    st.error("Passwords do not match.")
+                elif not check_password_strength(password):
+                    st.error("Password must be at least 8 characters long and include an uppercase letter, lowercase letter, and number.")
                 else:
-                    st.error("An account with this email already exists.")
+                    success = create_user(name, email, password)
+                    if success:
+                        st.success("Account created successfully! Please Log In.")
+                    else:
+                        st.error("An account with this email already exists.")

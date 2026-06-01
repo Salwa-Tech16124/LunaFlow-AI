@@ -21,6 +21,15 @@ def init_users_db():
             created_at DATETIME DEFAULT CURRENT_TIMESTAMP
         )
     ''')
+    
+    # Safe Migration for missing columns
+    c.execute("PRAGMA table_info(users)")
+    columns = [col[1] for col in c.fetchall()]
+    if 'age' not in columns:
+        c.execute("ALTER TABLE users ADD COLUMN age INTEGER DEFAULT 25")
+    if 'fcm_token' not in columns:
+        c.execute("ALTER TABLE users ADD COLUMN fcm_token TEXT DEFAULT ''")
+        
     conn.commit()
     conn.close()
 
