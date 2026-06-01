@@ -36,11 +36,28 @@ def apply_theme(is_dark=False):
         }}
         
         /* Global Background & Font */
+        html, body {{
+            overflow-x: hidden !important;
+            max-width: 100vw;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }}
+
         .stApp {{
             background-color: var(--background);
             color: var(--text);
             font-family: 'Inter', sans-serif;
             transition: background-color 0.5s ease;
+            overflow-x: hidden !important;
+        }}
+
+        .block-container {{
+            padding-left: 1.2rem !important;
+            padding-right: 1.2rem !important;
+            padding-top: 2rem !important;
+            max-width: 100% !important;
+            overflow-x: hidden !important;
         }}
 
         /* Typography */
@@ -73,6 +90,10 @@ def apply_theme(is_dark=False):
             transition: all 0.3s ease;
             animation: fadeIn 0.6s ease-out forwards;
             height: 100%;
+            width: 100%;
+            box-sizing: border-box;
+            word-wrap: break-word;
+            overflow-wrap: break-word;
         }}
         
         .metric-card:hover {{
@@ -150,11 +171,18 @@ def apply_theme(is_dark=False):
             padding: 10px 15px;
             transition: all 0.3s ease;
             box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+            font-size: 16px !important; /* Prevent iOS/WebView zoom */
         }}
         
         .stTextInput>div>div>input:focus, .stNumberInput>div>div>input:focus, .stDateInput>div>div>input:focus {{
             border-color: var(--primary) !important;
             box-shadow: 0 0 0 2px rgba(255, 126, 182, 0.2) !important;
+        }}
+        
+        /* Fix Plotly Charts Overflow on Mobile */
+        .js-plotly-plot, .plotly {{
+            max-width: 100% !important;
+            overflow-x: hidden !important;
         }}
 
         /* Sidebar & Extra components */
@@ -248,13 +276,21 @@ def apply_theme(is_dark=False):
 
         /* Small Phones (360px and down) */
         @media (max-width: 360px) {{
-            h1 {{ font-size: 1.8rem !important; }}
+            h1 {{ font-size: 1.6rem !important; }}
+            h2 {{ font-size: 1.4rem !important; }}
+            .metric-card {{
+                padding: 10px;
+            }}
             .metric-value {{
-                font-size: 1.2rem;
+                font-size: 1.1rem;
             }}
             .stButton>button {{
                 padding: 0.6rem;
                 font-size: 0.9rem;
+            }}
+            .block-container {{
+                padding-left: 0.8rem !important;
+                padding-right: 0.8rem !important;
             }}
         }}
 
